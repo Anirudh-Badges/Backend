@@ -8,14 +8,20 @@ const port = process.env.PORT || 8000;
 app.listen(port,(req,res)=>{
     // res.send(`Server Started At ${PORT}`);
     console.log("Welcome to the Server",port);
-})
+});
+
 
 dbConnect();
+
+app.use(express.json());
+
+const route = require("./routes/route");
+app.use("/api/v1",route);
 
 app.get("/demo",(req,res) => {
    return res.json({
     sucess: true,
-    message : "My name is Amisha",
+    message : "this is homepage",
    })
 })
 
