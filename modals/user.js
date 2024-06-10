@@ -1,6 +1,9 @@
 const mongoose = require("mongoose");
 
 const userSchema= new mongoose.Schema({
+    id:{
+        type:Number,
+    },
     firstName:{
         type:String,
         required : true,
@@ -15,10 +18,6 @@ const userSchema= new mongoose.Schema({
         type:String,
         required:true,
     },
-    contactNumber:{
-        type : Number,
-        required:true,
-    },
     password:{
         type :String,
         required:true,
@@ -31,12 +30,27 @@ const userSchema= new mongoose.Schema({
         min:[6,"Must have atleast 6 character"],
         max:10,
     },
-    account_type:{
+    active:{
+        type:Boolean,
+        default:true,
+    },
+    approved:{
+        type:Boolean,
+        default: true,
+    },
+    accountType:{
         type:String,
         enum:["Admin","Instructor","Student"],
         required : true
-        
+    },
+    aadditionalDetails: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Profile",
+    },
+    image:{
+        type:String,
+        required:true,
     }
-});
+},{ timestamps: true });
 
 module.exports = mongoose.model("User",userSchema);

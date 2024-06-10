@@ -1,6 +1,7 @@
 const User = require("../modals/user");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
+const Profile = require("../modals/profile");
 
 require("dotenv").config();
 
@@ -12,58 +13,68 @@ exports.Signup = async (req, res) => {
       email,
       password,
       confirmPassword,
-      contactNumber,
-      account_type,
+      accountType,
     } = req.body;
-
     if (
       !firstName ||
       !lastName ||
       !email ||
       !password ||
       !confirmPassword ||
-      !contactNumber
+      !accountType
     ) {
-      return res.status(400).json({
-        message: "Please fill all the fields",
+      return res.status(403).send({
+        success: false,
+        message: "Please fills all fields  ",
       });
     }
     if (password !== confirmPassword) {
       return res.status(400).json({
         success: false,
-        message:
-          "Password and confirm password doesn't match . Please fill again correctly.",
+        message: "Password and Confirm Password do not match.",
       });
     }
-    const isEmailValid = await User.findOne({ email });
 
-    if (isEmailValid) {
-      return res.status(400).json({ message: "Email already exists" });
+    const alreadyExists = await User.findOne({ email });
+    if (alreadyExists) {
+      return res.status(400).json({
+        success: false,
+        message: "User already exists",
+      });
     }
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    const hashPassword = await bcrypt.hash(password, 10);
+    let approved = "";
+    approved === "Instructor" ? (approved = false) : (approved = true);
 
+    const profile = await Profile.create({
+      gender: null,
+      dateOfBirth: null,
+      about: null,
+      contactNumber: null,
+    });
     const user = await User.create({
-      firstName: firstName,
-      lastName: lastName,
-      email: email,
-      password: hashPassword,
+      firstName,
+      lastName,
+      email,
+      password: hashedPassword,
       confirmPassword: confirmPassword,
-      contactNumber: contactNumber,
-      account_type: account_type,
+      accountType: accountType,
+      approved: approved,
+      additionalDetails: profile._id,
       image: `https://api.dicebear.com/5.x/initials/svg?seed=${firstName} ${lastName}`,
     });
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
-      message: "User created successfully",
       user,
+      message: "User registered successfully",
     });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return res.status(500).json({
       success: false,
-      message: "User failed to signup",
+      message: "User cannot be registered",
     });
   }
 };
@@ -84,12 +95,12 @@ exports.Login = async (req, res) => {
     const payload = {
       email: user.email,
       id: user._id,
-      account_type: user.account_type,
+      accountType: user.accountType,
     };
 
     if (await bcrypt.compare(password, user.password)) {
       const token = jwt.sign(payload, process.env.JWT_SECRET, {
-        expiresIn: "12h",
+        expiresIn: "24h",
       });
       user.token = token;
       user.password = undefined;
@@ -119,20 +130,47 @@ exports.Login = async (req, res) => {
   }
 };
 
+exports.changePassword = async (req, res) => {
+  try {
+    const userDetails = await User.findById(req.user.id);
+    const { oldPassword, newPassword, confirmNewPassword } = req.body;
+    const Matchpassoword = await bcrypt.compare(
+      oldPassword,
+      userDetails.password
+    );
+
+    if (!Matchpassoword) {
+      return res.status(401).json({
+        success: false,
+        message: "password not matched",
+      });
+    }
+
+    if(newPassword !== confirmNewPassword){
+      return res.status(401).json({
+        success: false,
+        message: "new password and confirm new password did not match"
+      });
+    }
+
+    const hashNewPassword = await bcrypt.hash(newPassword, 10);
+		const updateUserDetails = await User.findByIdAndUpdate(
+			req.user.id,
+			{ password: hashNewPassword },
+			{ new: true }
+		)
 
 
+    return res.status(200).json({
+      success: true,
+      message: "password changed successfully",
+    });
 
-
-
-
-
-
-// {
-//   "firstName":"isha",
-//   "lastName":"Sharma",
-//   "email":"isha2000@gmail.com",
-//   "password": "Abcdef123",
-//   "confirmPassword":"Abcdef123",
-//   "contactNumber": 8570002177,
-//   "accountType":"Admin"
-// }
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      status: false,
+      message: "Password cannot changed",
+    });
+  }
+};

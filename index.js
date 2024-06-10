@@ -18,10 +18,10 @@ app.use(express.json());
 const route = require("./routes/route");
 app.use("/api/v1",route);
 
-app.get("/demo",(req,res) => {
-   return res.json({
-    sucess: true,
-    message : "this is homepage",
-   })
-})
+// app.get("/demo",(req,res) => {
+//    return res.json({
+//     sucess: true,
+//     message : "this is homepage",
+//    })
+// })
 

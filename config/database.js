@@ -9,7 +9,6 @@ const dbConnect = () => {
         .then(() => { console.log("DB connection successful") })
         .catch((error) => { console.log("received an error");
             console.error(error.message);
-            //  
             process.exit(1);
          });
 }
