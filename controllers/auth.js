@@ -5,79 +5,144 @@ const Profile = require("../modals/profile");
 
 require("dotenv").config();
 
-exports.Signup = async (req, res) => {
+
+exports.signup  = async (req,res) => {
   try {
-    const {
-      firstName,
-      lastName,
-      email,
-      password,
-      confirmPassword,
-      accountType,
-    } = req.body;
-    if (
-      !firstName ||
-      !lastName ||
-      !email ||
-      !password ||
-      !confirmPassword ||
-      !accountType
-    ) {
-      return res.status(403).send({
+    const {firstName,lastName,email,password,confirmPassword,accountType} = req.body;
+    
+    if(!firstName || !lastName || !email || !password || !confirmPassword || !accountType){
+      return res.status(403).json({
         success: false,
-        message: "Please fills all fields  ",
+        message:"All field has to be filled",
       });
     }
-    if (password !== confirmPassword) {
+    const userExistOrNot = await User.findOne({email});
+    if(userExistOrNot){
       return res.status(400).json({
         success: false,
-        message: "Password and Confirm Password do not match.",
-      });
+        message:"User is already Exists please try with another email",
+      })
     }
 
-    const alreadyExists = await User.findOne({ email });
-    if (alreadyExists) {
+    if(password !== confirmPassword){
       return res.status(400).json({
         success: false,
-        message: "User already exists",
-      });
+        message: "password and confirmpassword has to be same",
+      })
     }
-    const hashedPassword = await bcrypt.hash(password, 10);
 
-    let approved = "";
-    approved === "Instructor" ? (approved = false) : (approved = true);
+    const hashpassword = await bcrypt.hash(password,10);
 
-    const profile = await Profile.create({
-      gender: null,
-      dateOfBirth: null,
-      about: null,
+    // const approved = null;
+    // if(approved === true) {
+    //   approved = true;
+    // }else{
+    //   approved = false;
+    // }
+
+    const profileInfo = await Profile.create({
+      gender:null,
+      about:null,
+      dateOfBirth:null,
       contactNumber: null,
     });
+
     const user = await User.create({
-      firstName,
-      lastName,
-      email,
-      password: hashedPassword,
-      confirmPassword: confirmPassword,
-      accountType: accountType,
-      approved: approved,
-      additionalDetails: profile._id,
+      firstName:firstName,
+      lastName:lastName,
+      email:email,
+      password:hashpassword,
+      confirmPassword:hashpassword,
+      additionalDetails:profileInfo,
+      accountType:accountType,
       image: `https://api.dicebear.com/5.x/initials/svg?seed=${firstName} ${lastName}`,
-    });
+    })
 
     return res.status(200).json({
       success: true,
-      user,
-      message: "User registered successfully",
-    });
+      message:"User created Successfully....",
+    })
+
   } catch (error) {
-    console.error(error);
     return res.status(500).json({
-      success: false,
-      message: "User cannot be registered",
-    });
+      success:false,
+      message:error.message
+    })
   }
-};
+}
+// exports.Signup = async (req, res) => {
+//   try {
+//     const {
+//       firstName,
+//       lastName,
+//       email,
+//       password,
+//       confirmPassword,
+//       accountType,
+//     } = req.body;
+//     if (
+//       !firstName ||
+//       !lastName ||
+//       !email ||
+//       !password ||
+//       !confirmPassword ||
+//       !accountType
+//     ) {
+//       return res.status(403).send({
+//         success: false,
+//         message: "Please fills all fields  ",
+//       });
+//     }
+//     if (password !== confirmPassword) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Password and Confirm Password do not match.",
+//       });
+//     }
+
+//     const alreadyExists = await User.findOne({ email });
+//     if (alreadyExists) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "User already exists",
+//       });
+//     }
+//     const hashedPassword = await bcrypt.hash(password, 10);
+
+//     let approved = "";
+//     approved === "Instructor" ? (approved = false) : (approved = true);
+
+//     const profile = await Profile.create({
+//       gender: null,
+//       dateOfBirth: null,
+//       about: null,
+//       contactNumber: null,
+//     });
+//     const user = await User.create({
+//       firstName,
+//       lastName,
+//       email,
+//       password: hashedPassword,
+//       confirmPassword: confirmPassword,
+//       accountType: accountType,
+//       approved: approved,
+//       additionalDetails: profile._id,
+//       image: `https://api.dicebear.com/5.x/initials/svg?seed=${firstName} ${lastName}`,
+//     });
+
+//     return res.status(200).json({
+//       success: true,
+//       user,
+//       message: "User registered successfully",
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     return res.status(500).json({
+//       success: false,
+//       message: "User cannot be registered",
+//     });
+//   }
+// };
 
 exports.Login = async (req, res) => {
   try {

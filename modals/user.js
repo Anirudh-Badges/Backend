@@ -1,9 +1,10 @@
 const mongoose = require("mongoose");
 
 const userSchema= new mongoose.Schema({
-    id:{
-        type:Number,
-    },
+    // id:{
+    //     type:String,
+    //     unique:true,
+    // },
     firstName:{
         type:String,
         required : true,
@@ -43,7 +44,7 @@ const userSchema= new mongoose.Schema({
         enum:["Admin","Instructor","Student"],
         required : true
     },
-    aadditionalDetails: {
+    additionalDetails: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Profile",
     },
